@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { BookingReservation } from '../types/booking';
+import { BookingReservation } from '@/types/booking';
 import { X, Trash2, Ticket } from 'lucide-react';
 
 interface MyBookingsDrawerProps {

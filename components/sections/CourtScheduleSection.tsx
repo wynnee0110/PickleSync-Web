@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Court, TimeSlot } from '../types/booking';
+import { Court, TimeSlot } from '@/types/booking';
 import { ChevronLeft, ChevronRight, Clock, ArrowUpRight, Sun, Sunset, CheckCircle2 } from 'lucide-react';
 import {
   isDateFullyBooked,
@@ -10,7 +10,7 @@ import {
   getCourtOpenSlotsCount,
   isCourtFullyBookedOnDate,
   getFirstOpenSlotForCourt,
-} from '../data/courtAvailability';
+} from '@/lib/courtAvailability';
 
 interface CourtScheduleSectionProps {
   courts: Court[];
@@ -196,15 +196,15 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
           Book a Court
         </h2>
         <p className="mt-2 text-sm sm:text-base text-slate-500">
-          Select a court to see available times, pick your slot, and reserve instantly
+          Pick your preferred date and time slot to reserve your court session instantly
         </p>
       </div>
 
-      {/* Centered 3 Cards Container: Left (Calendar) | Middle (Time) | Right (Courts) */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 max-w-6xl mx-auto">
+      {/* Centered 2 Cards Container: Left (Calendar) | Right (Time) */}
+      <div className="flex flex-col md:flex-row items-center md:items-start justify-center gap-6 max-w-4xl mx-auto">
 
         {/* CARD 1 (LEFT): CALENDAR CARD */}
-        <div className="w-full sm:w-[370px] shrink-0 rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+        <div className="w-full md:w-[380px] shrink-0 rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
           {/* Calendar Header */}
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
             <div>
@@ -340,21 +340,16 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
           </div>
         </div>
 
-        {/* CARD 2 (MIDDLE): TIME CARD (AVAILABILITY DETERMINED BY SELECTED COURT) */}
-        <div className="w-full sm:w-[350px] shrink-0 rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+        {/* CARD 2 (RIGHT): TIME CARD */}
+        <div className="w-full md:w-[380px] shrink-0 rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
           {/* Header */}
           <div className="pb-3 mb-3 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-base font-bold text-slate-900">
-                  Select Time
-                </h3>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-extrabold text-blue-700 border border-blue-200">
-                  Court #{selectedCourt.courtNumber}
-                </span>
-              </div>
+              <h3 className="text-base font-bold text-slate-900">
+                Select Time
+              </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Available slots for Court #{selectedCourt.courtNumber} • {monthNames[selectedMonth]} {selectedDay}
+                Available slots for {monthNames[selectedMonth]} {selectedDay}, {selectedYear}
               </p>
             </div>
             <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-blue-50 text-blue-600 shrink-0">
@@ -464,16 +459,12 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
             <div className="min-w-0">
               <div className="flex items-center gap-1 flex-wrap">
-                <span className="font-extrabold text-slate-900 text-xs truncate">
-                  Court #{selectedCourt.courtNumber}
-                </span>
-                <span className="text-slate-300">•</span>
                 <span className="font-extrabold text-blue-600 text-xs truncate">
                   {selectedTimes.length === 0
                     ? 'No time selected'
                     : selectedTimes.length === 1
                       ? selectedTimes[0]
-                      : `${selectedTimes.length} times`}
+                      : `${selectedTimes.length} times selected`}
                 </span>
               </div>
               <span className="text-[10px] text-slate-500 block truncate mt-0.5">
@@ -487,168 +478,14 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
               type="button"
               disabled={!hasSelectedSlots}
               onClick={handleBookSelected}
-              className={`rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 shrink-0 ${!hasSelectedSlots
+              className={`rounded-xl px-5 py-2.5 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 shrink-0 ${!hasSelectedSlots
                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 : 'bg-[#2563eb] text-white hover:bg-[#1d4ed8] active:scale-95 cursor-pointer shadow-sm'
                 }`}
             >
-              <span>{!hasSelectedSlots ? 'Select Time' : `Book Court #${selectedCourt.courtNumber}`}</span>
+              <span>{!hasSelectedSlots ? 'Select Time' : 'Book Now'}</span>
               {hasSelectedSlots && <ArrowUpRight className="h-3.5 w-3.5" />}
             </button>
-          </div>
-        </div>
-
-        {/* CARD 3 (RIGHT): 3x3 COURT CARD (CLICK A COURT TO SEE ITS TIMES) */}
-        <div className="w-full sm:w-[380px] shrink-0 rounded-3xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-sm">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                3×3 Courts
-              </h3>
-              <p className="text-[10px] text-slate-500 truncate max-w-[160px]">
-                Click court to view available times
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 text-[9px]">
-              <span className="flex items-center gap-1 text-emerald-700 font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Open
-              </span>
-              <span className="flex items-center gap-1 text-slate-500 font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" /> Full
-              </span>
-            </div>
-          </div>
-
-          {/* 3x3 Grid of 9 Courts: Selectable courts showing daily available slots */}
-          <div className="grid grid-cols-3 gap-1.5">
-            {displayCourts.map((court) => {
-              const isSelected = selectedCourt.id === court.id;
-              const openSlotsCount = getCourtOpenSlotsCount(court.courtNumber, selectedDay, allSlotTimes);
-              const isCourtFullToday = openSlotsCount === 0;
-
-              return (
-                <button
-                  type="button"
-                  key={court.id}
-                  disabled={isCourtFullToday}
-                  onClick={() => {
-                    if (!isCourtFullToday) {
-                      handleSelectCourt(court);
-                    }
-                  }}
-                  title={
-                    isCourtFullToday
-                      ? `Court #${court.courtNumber} is fully booked on this date`
-                      : `Select Court #${court.courtNumber} (${openSlotsCount} slots open)`
-                  }
-                  className={`group relative flex flex-col justify-between rounded-lg border p-1 transition-all text-left ${isCourtFullToday
-                    ? 'border-slate-200 bg-slate-100/90 opacity-40 cursor-not-allowed select-none'
-                    : isSelected
-                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600 shadow-xs cursor-pointer'
-                      : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300 cursor-pointer'
-                    }`}
-                >
-                  {/* Top: Court Badge & Status Dot */}
-                  <div className="flex items-center justify-between mb-0.5 w-full">
-                    <span
-                      className={`px-1 py-0.2 rounded text-[8px] font-black ${isCourtFullToday
-                        ? 'bg-slate-400 text-slate-100'
-                        : isSelected
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-900 text-white'
-                        }`}
-                    >
-                      #{court.courtNumber}
-                    </span>
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${isCourtFullToday ? 'bg-slate-400' : 'bg-emerald-500'
-                        }`}
-                      title={isCourtFullToday ? 'Fully Booked Today' : `${openSlotsCount} open slots`}
-                    />
-                  </div>
-
-                  {/* Visual Mini Top-Down Court Graphic */}
-                  <div
-                    className={`relative w-full aspect-[16/10] rounded overflow-hidden border p-0.5 flex items-center justify-center my-0.5 select-none ${isCourtFullToday
-                      ? 'bg-slate-300 border-slate-300 grayscale'
-                      : isSelected
-                        ? 'bg-[#3b82f6] border-blue-400'
-                        : 'bg-[#4a7ec2] border-slate-300/80'
-                      }`}
-                  >
-                    <svg viewBox="0 0 100 64" className="w-full h-full">
-                      <rect
-                        x="2"
-                        y="2"
-                        width="96"
-                        height="60"
-                        rx="1.5"
-                        fill={isCourtFullToday ? '#94a3b8' : isSelected ? '#3b82f6' : '#4a7ec2'}
-                        stroke="#ffffff"
-                        strokeWidth="1.2"
-                      />
-                      <rect
-                        x="34"
-                        y="2"
-                        width="32"
-                        height="60"
-                        fill={isCourtFullToday ? '#64748b' : isSelected ? '#1d4ed8' : '#2e5d95'}
-                        stroke="#ffffff"
-                        strokeWidth="1"
-                      />
-                      <line x1="2" y1="32" x2="34" y2="32" stroke="#ffffff" strokeWidth="1" />
-                      <line x1="66" y1="32" x2="98" y2="32" stroke="#ffffff" strokeWidth="1" />
-                      <line x1="50" y1="1" x2="50" y2="63" stroke="#ffffff" strokeWidth="1.8" strokeDasharray="2 1" />
-                    </svg>
-
-                    {isSelected && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-blue-900/30">
-                        <CheckCircle2 className="h-3 w-3 text-white stroke-[2.5]" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Court Info */}
-                  <div className="mt-0.5 w-full">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-bold text-slate-900 truncate leading-tight">
-                        C{court.courtNumber}
-                      </span>
-                      <span className="text-[8px] font-black text-slate-900">
-                        ₱{court.pricePerHour}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[8px] text-slate-500">
-                      <span className="truncate">
-                        {court.type === 'indoor' ? 'In' : court.type === 'championship' ? 'Pro' : 'Deck'}
-                      </span>
-                      <span className={isCourtFullToday ? 'text-rose-500 font-bold' : 'text-emerald-600 font-bold'}>
-                        {isCourtFullToday ? 'Full' : `${openSlotsCount} open`}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Action Bar for Selected Court Summary */}
-          <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5 text-xs">
-            <div className="min-w-0">
-              <span className="font-black text-xs text-slate-900 block truncate">
-                Court #{selectedCourt.courtNumber} • {selectedCourt.name.split(' ')[0]}
-              </span>
-              <span className="text-[10px] text-slate-500 block truncate">
-                {selectedCourtOpenSlotsCount} slots open on this date
-              </span>
-            </div>
-
-            <div className="text-right shrink-0">
-              <span className="text-[9px] font-bold text-slate-400 block uppercase">Base Rate</span>
-              <span className="text-xs font-black text-slate-900">₱{selectedCourt.pricePerHour}/hr</span>
-            </div>
           </div>
         </div>
 

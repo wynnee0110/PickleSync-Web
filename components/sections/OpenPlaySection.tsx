@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { OpenMatch } from '../types/booking';
+import { OpenMatch } from '@/types/booking';
 import { Zap, Users, Shield, Trophy, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 

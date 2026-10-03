@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Court } from '../types/booking';
+import { Court } from '@/types/booking';
 import { Sparkles, Activity, Video, Zap, Key } from 'lucide-react';
 
 interface CourtBlueprintProps {

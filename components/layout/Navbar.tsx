@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PickleMascot } from './PickleMascot';
-import { Menu, X, CalendarCheck } from 'lucide-react';
+import { PickleMascot } from '@/components/ui/PickleMascot';
+import { Menu, X, CalendarCheck, LayoutDashboard } from 'lucide-react';
+import Link from 'next/link';
 
 interface NavbarProps {
   bookingCount: number;
@@ -33,18 +34,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Center Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 lg:gap-10">
-          <button
-            onClick={() => onScrollToSection('court-schedule')}
-            className="text-sm font-bold text-[#365314] hover:text-[#4d7c0f] transition-colors cursor-pointer"
+          <Link
+            href="/book"
+            className="text-sm font-bold text-[#365314] hover:text-[#4d7c0f] transition-colors"
           >
             Book Court
-          </button>
-          <button
-            onClick={() => onScrollToSection('open-play')}
-            className="text-sm font-medium text-slate-700 hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Leagues & Play
-          </button>
+          </Link>
           <button
             onClick={() => onScrollToSection('memberships')}
             className="text-sm font-medium text-slate-700 hover:text-slate-950 transition-colors cursor-pointer"
@@ -52,6 +47,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             Memberships
           </button>
         </nav>
+
+        <Link
+          href="/admin"
+          className="hidden md:flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-slate-700 transition-colors"
+        >
+          <LayoutDashboard className="h-3.5 w-3.5" />
+          Admin
+        </Link>
 
         {/* Right CTA Area */}
         <div className="flex items-center gap-4">
@@ -97,24 +100,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="border-b border-slate-200 bg-white px-5 py-4 md:hidden flex flex-col gap-3 shadow-lg">
-          <button
-            onClick={() => {
-              onScrollToSection('court-schedule');
-              setMobileMenuOpen(false);
-            }}
+          <Link
+            href="/book"
+            onClick={() => setMobileMenuOpen(false)}
             className="text-left py-2 text-sm font-bold text-[#365314]"
           >
             Book Court
-          </button>
-          <button
-            onClick={() => {
-              onScrollToSection('open-play');
-              setMobileMenuOpen(false);
-            }}
-            className="text-left py-2 text-sm font-medium text-slate-700"
-          >
-            Leagues & Play
-          </button>
+          </Link>
           <button
             onClick={() => {
               onScrollToSection('memberships');

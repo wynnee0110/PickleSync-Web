@@ -1,22 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Clock, ArrowRight } from 'lucide-react';
-import { HeroCourtGraphic } from './HeroCourtGraphic';
+import { ArrowRight } from 'lucide-react';
+import { HeroCourtGraphic } from '@/components/ui/HeroCourtGraphic';
 
 interface HeroSectionProps {
-  selectedDate: string;
-  onDateChange: (date: string) => void;
-  selectedTimeWindow: string;
-  onTimeWindowChange: (time: string) => void;
   onBookNowClick: () => void;
+  selectedDate?: string;
+  onDateChange?: (date: string) => void;
+  selectedTimeWindow?: string;
+  onTimeWindowChange?: (time: string) => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
-  selectedDate,
-  onDateChange,
-  selectedTimeWindow,
-  onTimeWindowChange,
   onBookNowClick,
 }) => {
   return (
@@ -30,7 +26,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-          {/* Left Column: Headline & Social Proof */}
+          {/* Left Column: Headline, Social Proof & Book Now CTA */}
           <div className="lg:col-span-7 space-y-6">
             {/* Immediate Court Access Badge */}
             <div className="inline-flex items-center rounded-full border border-[#bef264] bg-[#f7fee7] px-3.5 py-1 text-xs font-black uppercase tracking-wider text-[#3f6212] shadow-xs">
@@ -77,67 +73,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <strong className="font-bold text-slate-900">1,250+ matches</strong> played on PickleSync court this season
               </p>
             </div>
+
+            {/* Instant Book Now Action Button */}
+            <div className="pt-2">
+              <button
+                onClick={onBookNowClick}
+                className="inline-flex items-center justify-center gap-3 rounded-2xl bg-[#2563eb] px-8 py-4 text-base font-bold text-white hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-lg shadow-blue-500/25 cursor-pointer group"
+              >
+                <span>Book Now</span>
+                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </button>
+            </div>
           </div>
 
           {/* Right Column: Aerial Top-Down Blue Court Graphic */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <HeroCourtGraphic />
-          </div>
-        </div>
-
-        {/* Integrated Quick Court Slot Finder */}
-        <div className="mt-12 mx-auto max-w-4xl rounded-3xl border border-slate-200/90 bg-white p-3 sm:p-4 shadow-xl shadow-slate-200/50">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {/* Date Selector */}
-            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-200/70 focus-within:border-blue-500 focus-within:bg-white transition-all">
-              <Calendar className="h-5 w-5 text-[#4d7c0f] shrink-0" />
-              <div className="w-full text-left">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Select Date
-                </label>
-                <select
-                  value={selectedDate}
-                  onChange={(e) => onDateChange(e.target.value)}
-                  aria-label="Select Date"
-                  className="w-full bg-transparent text-sm font-semibold text-slate-900 focus:outline-none cursor-pointer"
-                >
-                  <option value="today">Today (Live Slots)</option>
-                  <option value="tomorrow">Tomorrow</option>
-                  <option value="weekend">This Weekend</option>
-                  <option value="next-week">Next 7 Days</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Time Window */}
-            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-200/70 focus-within:border-blue-500 focus-within:bg-white transition-all">
-              <Clock className="h-5 w-5 text-amber-500 shrink-0" />
-              <div className="w-full text-left">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Preferred Time
-                </label>
-                <select
-                  value={selectedTimeWindow}
-                  onChange={(e) => onTimeWindowChange(e.target.value)}
-                  aria-label="Preferred Time"
-                  className="w-full bg-transparent text-sm font-semibold text-slate-900 focus:outline-none cursor-pointer"
-                >
-                  <option value="all">Anytime (07:00 - 23:00)</option>
-                  <option value="morning">Morning (07:00 - 12:00)</option>
-                  <option value="afternoon">Afternoon (12:00 - 17:00)</option>
-                  <option value="evening">Evening (17:00 - 23:00)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Instant Action Button */}
-            <button
-              onClick={onBookNowClick}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-[#2563eb] px-6 py-3.5 font-bold text-white hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-md cursor-pointer"
-            >
-              <span>View Available Slots</span>
-              <ArrowRight className="h-5 w-5" />
-            </button>
           </div>
         </div>
       </div>

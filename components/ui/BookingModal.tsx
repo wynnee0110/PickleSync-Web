@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Court, TimeSlot, BookingReservation } from '../types/booking';
+import { Court, TimeSlot, BookingReservation } from '@/types/booking';
 import confetti from 'canvas-confetti';
 import { 
   X, 

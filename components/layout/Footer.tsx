@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PickleMascot } from './PickleMascot';
+import { PickleMascot } from '@/components/ui/PickleMascot';
 import { ShieldCheck, MapPin, Phone, Clock, ArrowRight } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -29,8 +29,7 @@ export const Footer: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              The ultimate high-performance booking and matchmaking platform for pickleball 
-              athletes. Book courts, smash dinks, and play today.
+              The dedicated court management and direct booking system for PickleSync Arena athletes. Book on-site courts, smash dinks, and play today.
             </p>
             <div className="flex items-center gap-4 text-xs text-slate-300 pt-1">
               <span className="inline-flex items-center gap-1.5 text-blue-400 font-medium">
@@ -45,7 +44,7 @@ export const Footer: React.FC = () => {
           {/* Arena Hours & Info */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-              Club Hours
+              Facility Hours
             </h4>
             <ul className="space-y-2 text-xs">
               <li className="flex items-center gap-2">

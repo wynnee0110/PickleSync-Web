@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Star, MapPin, CheckCircle, Clock, Zap, Users, ArrowUpRight } from 'lucide-react';
-import { Court, TimeSlot } from '../types/booking';
+import { Court, TimeSlot } from '@/types/booking';
 
 interface CourtCardProps {
   court: Court;
