@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { COURTS_DATA } from '@/lib/courts';
@@ -18,14 +18,16 @@ export function BookCourtClient() {
   // Find court from query or default to court-1
   const initialCourt = COURTS_DATA.find((c) => c.id === courtParam) || COURTS_DATA[0];
   const [selectedCourt, setSelectedCourt] = useState<Court>(initialCourt);
+  const [prevCourtParam, setPrevCourtParam] = useState(courtParam);
 
   // Sync if query param changes
-  useEffect(() => {
-    if (courtParam) {
-      const match = COURTS_DATA.find((c) => c.id === courtParam);
-      if (match) setSelectedCourt(match);
+  if (courtParam !== prevCourtParam) {
+    setPrevCourtParam(courtParam);
+    const match = COURTS_DATA.find((c) => c.id === courtParam);
+    if (match) {
+      setSelectedCourt(match);
     }
-  }, [courtParam]);
+  }
 
   // Booking Modal State
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
@@ -99,7 +101,7 @@ export function BookCourtClient() {
         </div>
       </div>
 
-      {/* Main 2-Box Court Selector & Schedule Section */}
+      {/* Main 3-Box Court Selector, Calendar & Schedule Section */}
       <div className="pt-4">
         <CourtScheduleSection
           courts={COURTS_DATA}
