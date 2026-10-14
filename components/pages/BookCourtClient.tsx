@@ -57,13 +57,13 @@ export function BookCourtClient() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-12 sm:pb-20">
+    <div className="min-h-screen bg-slate-50/50 pb-20">
 
       {/* Header Banner */}
-      <div className="border-b border-slate-200/80 bg-white px-3 sm:px-6 py-5 sm:py-8 lg:py-10">
+      <div className="border-b border-slate-200/80 bg-white px-4 py-8 sm:py-10">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500 mb-2 sm:mb-3">
+          <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
             <Link href="/" className="hover:text-slate-900 transition-colors flex items-center gap-1">
               <ArrowLeft className="h-3.5 w-3.5" />
               <span>Home</span>
@@ -72,28 +72,28 @@ export function BookCourtClient() {
             <span className="font-semibold text-slate-900">Book a Court</span>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-[#bef264] bg-[#f7fee7] px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#3f6212] mb-1.5 sm:mb-2 shadow-xs">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-[#bef264] bg-[#f7fee7] px-3 py-1 text-xs font-black uppercase tracking-wider text-[#3f6212] mb-2">
                 <Sparkles className="h-3 w-3" />
                 Live Court Availability
               </div>
-              <h1 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight">
                 Book a Court
               </h1>
-              <p className="text-xs sm:text-base text-slate-600 mt-1 max-w-2xl">
+              <p className="text-sm sm:text-base text-slate-600 mt-1 max-w-2xl">
                 Check real-time availability on the calendar and reserve your time slot instantly with smart gate access.
               </p>
             </div>
 
             {/* Quick Feature Badges */}
-            <div className="flex items-center gap-2 sm:gap-3 self-start md:self-auto flex-wrap pt-1 sm:pt-0">
-              <div className="flex items-center gap-1.5 sm:gap-2 rounded-xl bg-slate-50 border border-slate-200 px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium text-slate-700">
-                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#4d7c0f]" />
+            <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
+              <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
+                <Clock className="h-4 w-4 text-[#4d7c0f]" />
                 <span>Instant Confirmation</span>
               </div>
-              <div className="flex items-center gap-1.5 sm:gap-2 rounded-xl bg-slate-50 border border-slate-200 px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium text-slate-700">
-                <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+              <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
+                <Shield className="h-4 w-4 text-blue-600" />
                 <span>Keyless Gate PIN</span>
               </div>
             </div>
@@ -101,8 +101,8 @@ export function BookCourtClient() {
         </div>
       </div>
 
-      {/* Main Court Selector, Calendar & Schedule Section */}
-      <div className="pt-2 sm:pt-4">
+      {/* Main 3-Box Court Selector, Calendar & Schedule Section */}
+      <div className="pt-4">
         <CourtScheduleSection
           courts={COURTS_DATA}
           selectedCourt={selectedCourt}
