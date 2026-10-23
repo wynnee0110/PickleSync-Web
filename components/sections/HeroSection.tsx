@@ -47,32 +47,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               cushioned turf with instant keyless gate access.
             </p>
 
-            {/* Social Proof Avatars */}
-            <div className="flex items-center gap-3 pt-1">
-              <div className="flex -space-x-2 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"
-                  alt="Player 1"
-                />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80"
-                  alt="Player 2"
-                />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80"
-                  alt="Player 3"
-                />
-              </div>
-              <p className="text-xs sm:text-sm text-slate-600">
-                <strong className="font-bold text-slate-900">1,250+ matches</strong> played on PickleSync court this season
-              </p>
-            </div>
 
             {/* Instant Book Now Action Button */}
             <div className="pt-2">
