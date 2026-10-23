@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { PickleMascot } from '@/components/ui/PickleMascot';
-import { Menu, X, CalendarCheck, LayoutDashboard } from 'lucide-react';
+import { CalendarCheck, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 
 interface NavbarProps {
@@ -16,57 +16,54 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenMyBookings,
   onScrollToSection,
 }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md transition-all">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 relative">
         {/* Brand Logo with Pickle Mascot */}
         <div 
           onClick={() => onScrollToSection('hero')} 
           className="flex items-center gap-2.5 cursor-pointer group select-none"
         >
-          <PickleMascot size={36} className="transition-transform group-hover:scale-105" />
-          <span className="text-2xl font-black tracking-tight text-slate-950">
+          <PickleMascot size={34} className="transition-transform group-hover:scale-105" />
+          <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-950">
             PickleSync
           </span>
         </div>
 
-        {/* Center Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8 lg:gap-10">
+        {/* Center Navigation Links (Desktop) */}
+        <nav className="hidden md:flex items-center gap-8 md:absolute md:left-1/2 md:-translate-x-1/2">
           <Link
             href="/book"
-            className="text-sm font-bold text-[#365314] hover:text-[#4d7c0f] transition-colors"
+            className="text-sm font-semibold text-slate-700 hover:text-slate-950 transition-colors"
           >
             Book Court
           </Link>
           <button
             onClick={() => onScrollToSection('memberships')}
-            className="text-sm font-medium text-slate-700 hover:text-slate-950 transition-colors cursor-pointer"
+            className="text-sm font-semibold text-slate-700 hover:text-slate-950 transition-colors cursor-pointer"
           >
             Memberships
           </button>
+          <Link
+            href="/admin"
+            className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-950 transition-colors"
+          >
+            <LayoutDashboard className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+            Admin
+          </Link>
         </nav>
 
-        <Link
-          href="/admin"
-          className="hidden md:flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-slate-700 transition-colors"
-        >
-          <LayoutDashboard className="h-3.5 w-3.5" />
-          Admin
-        </Link>
-
         {/* Right CTA Area */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           {/* Active Passes Indicator */}
           {bookingCount > 0 && (
             <button
               onClick={onOpenMyBookings}
-              className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer"
               title="View your active reservations"
             >
               <CalendarCheck className="h-3.5 w-3.5" />
-              <span>{bookingCount} Pass{bookingCount > 1 ? 'es' : ''}</span>
+              <span>{bookingCount} <span className="hidden sm:inline">Pass{bookingCount > 1 ? 'es' : ''}</span></span>
             </button>
           )}
 
@@ -81,63 +78,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* JOIN CLUB Button */}
           <button
             onClick={() => onScrollToSection('memberships')}
-            className="rounded-xl bg-[#2563eb] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm cursor-pointer"
+            className="rounded-xl bg-[#2563eb] px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm cursor-pointer"
           >
             JOIN CLUB
           </button>
-
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex md:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100"
-            aria-label="Toggle Menu"
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
         </div>
       </div>
-
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="border-b border-slate-200 bg-white px-5 py-4 md:hidden flex flex-col gap-3 shadow-lg">
-          <Link
-            href="/book"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-left py-2 text-sm font-bold text-[#365314]"
-          >
-            Book Court
-          </Link>
-          <button
-            onClick={() => {
-              onScrollToSection('memberships');
-              setMobileMenuOpen(false);
-            }}
-            className="text-left py-2 text-sm font-medium text-slate-700"
-          >
-            Memberships
-          </button>
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-            <button
-              onClick={() => {
-                onOpenMyBookings();
-                setMobileMenuOpen(false);
-              }}
-              className="text-sm font-semibold text-slate-800"
-            >
-              My Passes ({bookingCount})
-            </button>
-            <button
-              onClick={() => {
-                onScrollToSection('memberships');
-                setMobileMenuOpen(false);
-              }}
-              className="rounded-xl bg-[#2563eb] px-4 py-2 text-xs font-bold text-white uppercase"
-            >
-              JOIN CLUB
-            </button>
-          </div>
-        </div>
-      )}
     </header>
   );
 };

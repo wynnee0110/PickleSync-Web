@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { COURTS_DATA } from '@/lib/courts';
 import { useBooking } from '@/components/providers/BookingProvider';
 import { Court } from '@/types/booking';
@@ -30,6 +31,7 @@ import { NewReservationModal } from './modals/NewReservationModal';
 import { CourtStatusModal } from './modals/CourtStatusModal';
 
 export function AdminDashboardClient() {
+  const router = useRouter();
   const { bookings, addBooking, cancelBooking, showToast } = useBooking();
 
   // Navigation & Shell State
@@ -83,6 +85,7 @@ export function AdminDashboardClient() {
   // Handle Sign Out
   const handleSignOut = () => {
     showToast('Signed out of admin session');
+    router.push('/admin/login');
   };
 
   // Export CSV

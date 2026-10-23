@@ -4,6 +4,7 @@ import React from 'react';
 import { useBooking } from '@/components/providers/BookingProvider';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { MyBookingsDrawer } from '@/components/ui/MyBookingsDrawer';
 import { Check } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -60,7 +61,7 @@ export function RootShell({ children }: { children: React.ReactNode }) {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-emerald-300 bg-white px-5 py-3.5 shadow-2xl text-slate-900"
+          className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-3 rounded-2xl border border-emerald-300 bg-white px-5 py-3.5 shadow-2xl text-slate-900"
         >
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white">
             <Check className="h-4 w-4 stroke-[3]" />
@@ -77,10 +78,18 @@ export function RootShell({ children }: { children: React.ReactNode }) {
       />
 
       {/* Page content */}
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-24 md:pb-0">{children}</main>
 
       {/* Persistent Footer */}
       <Footer />
+
+      {/* Floating Glassmorphic Mobile Bottom Navigation */}
+      <MobileBottomNav
+        bookingCount={bookings.length}
+        onOpenMyBookings={() => setMyBookingsDrawerOpen(true)}
+        onScrollToSection={handleScrollToSection}
+        isDrawerOpen={myBookingsDrawerOpen}
+      />
 
       {/* Global Bookings Drawer */}
       <MyBookingsDrawer

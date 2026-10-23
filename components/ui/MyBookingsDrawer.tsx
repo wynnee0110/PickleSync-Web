@@ -46,8 +46,8 @@ export const MyBookingsDrawer: React.FC<MyBookingsDrawerProps> = ({
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {bookings.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12">
-                <div className="h-16 w-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-3xl mb-4">
-                  🎟️
+                <div className="h-16 w-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-4">
+                  <Ticket className="h-7 w-7 text-blue-600" />
                 </div>
                 <h4 className="text-base font-bold text-slate-900">No active reservations yet</h4>
                 <p className="text-xs text-slate-500 mt-1 max-w-xs">

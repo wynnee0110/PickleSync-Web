@@ -2,6 +2,7 @@
 export { Navbar } from './layout/Navbar';
 export { Footer } from './layout/Footer';
 export { RootShell } from './layout/RootShell';
+export { MobileBottomNav } from './layout/MobileBottomNav';
 
 // Sections — full-width page blocks
 export { HeroSection } from './sections/HeroSection';
