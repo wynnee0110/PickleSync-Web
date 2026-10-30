@@ -12,7 +12,7 @@ export default function NotFound() {
         <span className="text-4xl">🏓</span>
       </div>
       <h1 className="mb-2 text-6xl font-black text-slate-900 tracking-tight">404</h1>
-      <p className="mb-2 text-xl font-semibold text-slate-700">Court not found</p>
+      <p className="mb-2 text-xl font-semibold text-slate-700">Page not found</p>
       <p className="mb-8 max-w-md text-slate-500 text-sm">
         Looks like this page drifted out of bounds. Head back to find your court.
       </p>
