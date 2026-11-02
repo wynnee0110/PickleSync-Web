@@ -49,11 +49,12 @@ export function AdminDashboardClient() {
 
   // Modals State
   const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
+  const [defaultCourtIdForBooking, setDefaultCourtIdForBooking] = useState<string>('');
   const [isCourtStatusModalOpen, setIsCourtStatusModalOpen] = useState(false);
   const [selectedCourtForStatus, setSelectedCourtForStatus] = useState<Court | null>(null);
 
-  // Editable courts state
-  const [courtsList, setCourtsList] = useState<Court[]>(COURTS_DATA);
+  // Editable courts state (Courts #1 and #2 for this facility owner)
+  const [courtsList, setCourtsList] = useState<Court[]>(() => COURTS_DATA.slice(0, 2));
 
   // Court counts & metrics
   const totalCourts = courtsList.length;
@@ -322,6 +323,11 @@ export function AdminDashboardClient() {
                   setSelectedCourtForStatus(court);
                   setIsCourtStatusModalOpen(true);
                 }}
+                liveBookings={bookings}
+                onQuickBookCourt={(court) => {
+                  setDefaultCourtIdForBooking(court.id);
+                  setIsNewBookingModalOpen(true);
+                }}
               />
 
               {/* Recent Bookings & Activity */}
@@ -357,6 +363,11 @@ export function AdminDashboardClient() {
                 onSelectCourtForStatus={(court) => {
                   setSelectedCourtForStatus(court);
                   setIsCourtStatusModalOpen(true);
+                }}
+                liveBookings={bookings}
+                onQuickBookCourt={(court) => {
+                  setDefaultCourtIdForBooking(court.id);
+                  setIsNewBookingModalOpen(true);
                 }}
               />
 
@@ -463,6 +474,7 @@ export function AdminDashboardClient() {
         isOpen={isNewBookingModalOpen}
         onClose={() => setIsNewBookingModalOpen(false)}
         courts={courtsList}
+        defaultCourtId={defaultCourtIdForBooking}
         onSubmit={handleCreateReservation}
       />
 

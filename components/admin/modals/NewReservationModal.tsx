@@ -7,6 +7,7 @@ interface NewReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
   courts: Court[];
+  defaultCourtId?: string;
   onSubmit: (data: ReservationFormData) => void;
 }
 
@@ -14,17 +15,18 @@ export function NewReservationModal({
   isOpen,
   onClose,
   courts,
+  defaultCourtId,
   onSubmit,
 }: NewReservationModalProps) {
   const [formCourtId, setFormCourtId] = useState('');
   const [formPlayerName, setFormPlayerName] = useState('');
   const [formTimeSlot, setFormTimeSlot] = useState('06:00 PM');
-  const [formDate, setFormDate] = useState('Today');
+  const [formDate, setFormDate] = useState('Sep 9, 2025');
   const [formDuration, setFormDuration] = useState('60');
 
   if (!isOpen) return null;
 
-  const effectiveCourtId = formCourtId || courts[0]?.id || '';
+  const effectiveCourtId = formCourtId || defaultCourtId || courts[0]?.id || '';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +93,7 @@ export function NewReservationModal({
             >
               {courts.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} (₱{c.pricePerHour}/hr)
+                  Court #{c.courtNumber} · {c.name} (₱{c.pricePerHour}/hr)
                 </option>
               ))}
             </select>
@@ -106,10 +108,10 @@ export function NewReservationModal({
                 onChange={(e) => setFormDate(e.target.value)}
                 className="w-full rounded-xl border border-[#dadce0] px-3 py-2 text-sm text-[#1f1f1f] outline-none focus:border-[#0b57d0] focus:ring-1 focus:ring-[#0b57d0] bg-white cursor-pointer"
               >
-                <option value="Today">Today</option>
-                <option value="Tomorrow">Tomorrow</option>
-                <option value="Friday">This Friday</option>
-                <option value="Saturday">This Saturday</option>
+                <option value="Sep 9, 2025">Sep 9, 2025 (Today)</option>
+                <option value="Sep 10, 2025">Sep 10, 2025 (Tomorrow)</option>
+                <option value="Sep 11, 2025">Sep 11, 2025</option>
+                <option value="Sep 12, 2025">Sep 12, 2025</option>
               </select>
             </div>
             <div>
@@ -120,11 +122,17 @@ export function NewReservationModal({
                 className="w-full rounded-xl border border-[#dadce0] px-3 py-2 text-sm text-[#1f1f1f] outline-none focus:border-[#0b57d0] focus:ring-1 focus:ring-[#0b57d0] bg-white cursor-pointer"
               >
                 <option value="08:00 AM">08:00 AM</option>
+                <option value="09:00 AM">09:00 AM</option>
                 <option value="10:00 AM">10:00 AM</option>
+                <option value="11:00 AM">11:00 AM</option>
+                <option value="01:00 PM">01:00 PM</option>
                 <option value="02:00 PM">02:00 PM</option>
+                <option value="03:00 PM">03:00 PM</option>
                 <option value="04:00 PM">04:00 PM</option>
+                <option value="05:00 PM">05:00 PM</option>
                 <option value="06:00 PM">06:00 PM</option>
-                <option value="07:30 PM">07:30 PM</option>
+                <option value="07:00 PM">07:00 PM</option>
+                <option value="08:00 PM">08:00 PM</option>
               </select>
             </div>
           </div>

@@ -84,26 +84,26 @@ export const INITIAL_WEEKLY_REVENUE: WeeklyRevenueItem[] = [
 ];
 
 export const INITIAL_RECENT_ACTIVITY: ActivityItem[] = [
-  { id: 'BK-901234', player: 'Marcus L.', court: 'Center Court Championship', time: '2 min ago', amount: 200, status: 'confirmed', initials: 'ML', color: 'bg-[#d2e3fc] text-[#0b57d0]' },
-  { id: 'BK-901190', player: 'Sarah K.', court: 'The Sonic Dome', time: '14 min ago', amount: 180, status: 'confirmed', initials: 'SK', color: 'bg-[#ceead6] text-[#137333]' },
-  { id: 'BK-901043', player: 'Jake T.', court: 'Rooftop Blaze', time: '31 min ago', amount: 160, status: 'pending', initials: 'JT', color: 'bg-[#feefc3] text-[#b06000]' },
-  { id: 'BK-900988', player: 'Priya M.', court: 'The Neon Grid (UV)', time: '1 hr ago', amount: 200, status: 'confirmed', initials: 'PM', color: 'bg-[#f3e8fd] text-[#7c3aed]' },
-  { id: 'BK-900712', player: 'Chris D.', court: 'Canyon View Outdoor', time: '2 hr ago', amount: 140, status: 'cancelled', initials: 'CD', color: 'bg-[#fad2cf] text-[#c5221f]' },
-  { id: 'BK-900401', player: 'Wei Z.', court: 'Center Court Championship', time: '3 hr ago', amount: 200, status: 'confirmed', initials: 'WZ', color: 'bg-[#e8eaed] text-[#3c4043]' },
+  { id: 'BK-901234', player: 'Marcus L.', court: 'Court #1 · Center Court Championship', time: '2 min ago', amount: 200, status: 'confirmed', initials: 'ML', color: 'bg-[#d2e3fc] text-[#0b57d0]' },
+  { id: 'BK-901190', player: 'Sarah K.', court: 'Court #2 · The Sonic Dome (Indoor AC)', time: '14 min ago', amount: 200, status: 'confirmed', initials: 'SK', color: 'bg-[#ceead6] text-[#137333]' },
+  { id: 'BK-901043', player: 'Jake T.', court: 'Court #1 · Center Court Championship', time: '31 min ago', amount: 200, status: 'pending', initials: 'JT', color: 'bg-[#feefc3] text-[#b06000]' },
+  { id: 'BK-900988', player: 'Priya M.', court: 'Court #2 · The Sonic Dome (Indoor AC)', time: '1 hr ago', amount: 200, status: 'confirmed', initials: 'PM', color: 'bg-[#f3e8fd] text-[#7c3aed]' },
+  { id: 'BK-900712', player: 'Chris D.', court: 'Court #1 · Center Court Championship', time: '2 hr ago', amount: 200, status: 'cancelled', initials: 'CD', color: 'bg-[#fad2cf] text-[#c5221f]' },
+  { id: 'BK-900401', player: 'Wei Z.', court: 'Court #2 · The Sonic Dome (Indoor AC)', time: '3 hr ago', amount: 200, status: 'confirmed', initials: 'WZ', color: 'bg-[#e8eaed] text-[#3c4043]' },
 ];
 
 export const MEMBERS_ONLINE: MemberOnline[] = [
-  { name: 'Marcus L.', email: 'marcus.l@example.com', dupr: 4.2, initials: 'ML', status: 'playing', court: 'Center Court' },
-  { name: 'Sarah K.', email: 'sarah.k@example.com', dupr: 3.8, initials: 'SK', status: 'booked', court: 'Sonic Dome' },
-  { name: 'Jake T.', email: 'jake.t@example.com', dupr: 5.0, initials: 'JT', status: 'booked', court: 'Rooftop Blaze' },
+  { name: 'Marcus L.', email: 'marcus.l@example.com', dupr: 4.2, initials: 'ML', status: 'playing', court: 'Court #1' },
+  { name: 'Sarah K.', email: 'sarah.k@example.com', dupr: 3.8, initials: 'SK', status: 'booked', court: 'Court #2' },
+  { name: 'Jake T.', email: 'jake.t@example.com', dupr: 5.0, initials: 'JT', status: 'booked', court: 'Court #1' },
   { name: 'Priya M.', email: 'priya.m@example.com', dupr: 4.5, initials: 'PM', status: 'browsing', court: 'Lounge' },
 ];
 
 export const INITIAL_NOTIFICATIONS: AdminNotification[] = [
-  { id: 'n1', title: 'New reservation confirmed', desc: 'Marcus L. booked Center Court for 07:00 PM', time: '2m ago', unread: true },
-  { id: 'n2', title: 'Maintenance scheduled', desc: 'Court 3 LED illumination inspection at 11:00 PM', time: '1h ago', unread: true },
+  { id: 'n1', title: 'New reservation confirmed', desc: 'Marcus L. booked Court #1 for 07:00 PM', time: '2m ago', unread: true },
+  { id: 'n2', title: 'Maintenance scheduled', desc: 'Court #2 LED illumination inspection at 11:00 PM', time: '1h ago', unread: true },
   { id: 'n3', title: 'Weekly payout processed', desc: '₱12,450 sent to Stripe primary club balance', time: '4h ago', unread: false },
-  { id: 'n4', title: 'High court demand', desc: 'Occupancy exceeded 85% for weekend slots', time: '1d ago', unread: false },
+  { id: 'n4', title: 'High court demand', desc: 'Occupancy exceeded 85% across both courts', time: '1d ago', unread: false },
 ];
 
 export const NAV_ITEMS: NavItemConfig[] = [
