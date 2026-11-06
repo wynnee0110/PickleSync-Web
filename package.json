@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:backend": "backend/venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "node scripts/lint-test.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^1.47.0",
     "next": "16.3.5",
