@@ -1,5 +1,9 @@
+import os
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ENV_PATH = os.path.join(BACKEND_DIR, ".env")
 
 
 class Settings(BaseSettings):
@@ -24,7 +28,7 @@ class Settings(BaseSettings):
     ]
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(ENV_PATH, ".env"),
         env_file_encoding="utf-8",
         extra="ignore"
     )
