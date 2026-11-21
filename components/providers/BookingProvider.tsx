@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { COURTS_DATA } from '@/lib/courts';
 import { BookingReservation } from '@/types/booking';
+import { fetchBookingsFromAPI, cancelBookingAPI } from '@/lib/api/client';
 
 interface BookingContextValue {
   bookings: BookingReservation[];
@@ -48,17 +49,36 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [myBookingsDrawerOpen, setMyBookingsDrawerOpen] = useState(false);
 
+  // Sync with live Supabase database on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadBookings() {
+      const live = await fetchBookingsFromAPI();
+      if (isMounted && live.length > 0) {
+        setBookings(live);
+      }
+    }
+    loadBookings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   }, []);
 
   const addBooking = useCallback((reservation: BookingReservation) => {
-    setBookings((prev) => [reservation, ...prev]);
+    setBookings((prev) => [
+      reservation,
+      ...prev.filter((b) => b.bookingId !== reservation.bookingId),
+    ]);
   }, []);
 
-  const cancelBooking = useCallback((bookingId: string) => {
+  const cancelBooking = useCallback(async (bookingId: string) => {
     setBookings((prev) => prev.filter((b) => b.bookingId !== bookingId));
+    await cancelBookingAPI(bookingId);
   }, []);
 
   return (

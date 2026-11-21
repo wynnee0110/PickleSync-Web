@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Court, TimeSlot } from '@/types/booking';
 import {
   ChevronLeft,
@@ -21,6 +21,8 @@ import {
   isCourtOccupied,
   isDateInPast,
   isDateBeyondAdvanceLimit,
+  isDateToday,
+  isTimeSlotPassedToday,
   MAX_ADVANCE_DAYS,
   getCourtOpenSlotsCount,
   isCourtFullyBookedOnDate,
@@ -36,30 +38,43 @@ interface CourtScheduleSectionProps {
 
 type BookingStep = 'date' | 'loading' | 'court_and_time';
 
+const MONTH_NAMES = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
 export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
   courts,
   selectedCourt,
   onSelectCourt,
   onSelectSlot,
 }) => {
-  const monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
+  const monthNames = MONTH_NAMES;
 
-  // Base month starting from September 2025
-  const BASE_MONTH = 8; // September
-  const BASE_YEAR = 2025;
+  // Dynamic real-time date & clock base (auto-updates every 30s)
+  const [now, setNow] = useState<Date>(() => new Date());
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const futureMonths = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date(BASE_YEAR, BASE_MONTH + i, 1);
-    return {
-      offset: i,
-      month: date.getMonth(),
-      year: date.getFullYear(),
-      name: monthNames[date.getMonth()],
-    };
-  });
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const todayDayNum = now.getDate();
+
+  const futureMonths = useMemo(() => {
+    return Array.from({ length: 3 }, (_, i) => {
+      const date = new Date(currentYear, currentMonth + i, 1);
+      return {
+        offset: i,
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        name: MONTH_NAMES[date.getMonth()],
+      };
+    });
+  }, [currentYear, currentMonth]);
 
   const [currentStep, setCurrentStep] = useState<BookingStep>('date');
   const [monthOffset, setMonthOffset] = useState(0);
@@ -67,7 +82,7 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
   const selectedMonth = currentMonthData.month;
   const selectedYear = currentMonthData.year;
 
-  const [selectedDay, setSelectedDay] = useState(9);
+  const [selectedDay, setSelectedDay] = useState(todayDayNum);
 
   // Morning slots in 1-hour intervals
   const morningSlots = [
@@ -94,32 +109,45 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
   const allSlotTimes = allScheduleSlots.map((s) => s.time);
   const displayCourts = courts.slice(0, 2);
 
+  // Is currently selected date today?
+  const isCurrentSelectionToday = isDateToday(selectedYear, selectedMonth, selectedDay, now);
+
   // Selected Time Slots State
   const [selectedTimes, setSelectedTimes] = useState<string[]>(() => {
-    const firstOpen = getFirstOpenSlotForCourt(selectedCourt.courtNumber, 9, allSlotTimes);
-    return firstOpen ? [firstOpen] : ['08:00 AM'];
+    const firstOpen = getFirstOpenSlotForCourt(selectedCourt.courtNumber, todayDayNum, allSlotTimes, true, now);
+    return firstOpen ? [firstOpen] : [];
   });
 
   // Days in month logic
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(selectedYear, selectedMonth, 1).getDay();
+  const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  // Can navigate to next month if 5-day advance window spills into next month
+  const canGoNextMonth = todayDayNum + MAX_ADVANCE_DAYS > daysInCurrentMonth;
+
+  const handleChangeMonthOffset = (nextOffset: number) => {
+    setMonthOffset(nextOffset);
+    setSelectedDay(nextOffset === 0 ? todayDayNum : 1);
+  };
 
   const handlePrevMonth = () => {
     if (monthOffset > 0) {
-      setMonthOffset((prev) => prev - 1);
+      handleChangeMonthOffset(monthOffset - 1);
     }
   };
 
   const handleNextMonth = () => {
-    if (monthOffset < futureMonths.length - 1) {
-      setMonthOffset((prev) => prev + 1);
+    if (canGoNextMonth && monthOffset < 1) {
+      handleChangeMonthOffset(monthOffset + 1);
     }
   };
 
   const handleSelectDay = (dayNum: number) => {
+    const isTargetToday = isDateToday(selectedYear, selectedMonth, dayNum, now);
     if (
-      isDateInPast(dayNum, monthOffset) ||
-      isDateBeyondAdvanceLimit(dayNum, monthOffset) ||
+      isDateInPast(selectedYear, selectedMonth, dayNum, now) ||
+      isDateBeyondAdvanceLimit(selectedYear, selectedMonth, dayNum, now) ||
       isDateFullyBooked(dayNum)
     ) {
       return;
@@ -127,9 +155,9 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
     setSelectedDay(dayNum);
 
     let activeCourt = selectedCourt;
-    if (isCourtFullyBookedOnDate(selectedCourt.courtNumber, dayNum, allSlotTimes)) {
+    if (isCourtFullyBookedOnDate(selectedCourt.courtNumber, dayNum, allSlotTimes, isTargetToday, now)) {
       const firstOpenCourt = displayCourts.find(
-        (c) => !isCourtFullyBookedOnDate(c.courtNumber, dayNum, allSlotTimes)
+        (c) => !isCourtFullyBookedOnDate(c.courtNumber, dayNum, allSlotTimes, isTargetToday, now)
       );
       if (firstOpenCourt) {
         activeCourt = firstOpenCourt;
@@ -138,16 +166,23 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
     }
 
     setSelectedTimes((prev) => {
-      const stillOpen = prev.filter((t) => !isCourtOccupied(activeCourt.courtNumber, dayNum, t));
+      const stillOpen = prev.filter(
+        (t) =>
+          !isCourtOccupied(activeCourt.courtNumber, dayNum, t, false) &&
+          !isTimeSlotPassedToday(t, isTargetToday, now)
+      );
       if (stillOpen.length > 0) return stillOpen;
-      const firstOpen = getFirstOpenSlotForCourt(activeCourt.courtNumber, dayNum, allSlotTimes);
+      const firstOpen = getFirstOpenSlotForCourt(activeCourt.courtNumber, dayNum, allSlotTimes, isTargetToday, now);
       return firstOpen ? [firstOpen] : [];
     });
   };
 
   // Click Next on Date step -> show loading briefly then show court & time
   const handleProceedToCourtAndTime = () => {
-    if (isDateFullyBooked(selectedDay) || isDateBeyondAdvanceLimit(selectedDay, monthOffset)) {
+    if (
+      isDateFullyBooked(selectedDay) ||
+      isDateBeyondAdvanceLimit(selectedYear, selectedMonth, selectedDay, now)
+    ) {
       return;
     }
     setCurrentStep('loading');
@@ -158,9 +193,9 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
       const timer = setTimeout(() => {
         // Ensure active court has open slots or fallback to other court
         let activeCourt = selectedCourt;
-        if (isCourtFullyBookedOnDate(selectedCourt.courtNumber, selectedDay, allSlotTimes)) {
+        if (isCourtFullyBookedOnDate(selectedCourt.courtNumber, selectedDay, allSlotTimes, isCurrentSelectionToday, now)) {
           const alternativeCourt = displayCourts.find(
-            (c) => !isCourtFullyBookedOnDate(c.courtNumber, selectedDay, allSlotTimes)
+            (c) => !isCourtFullyBookedOnDate(c.courtNumber, selectedDay, allSlotTimes, isCurrentSelectionToday, now)
           );
           if (alternativeCourt) {
             activeCourt = alternativeCourt;
@@ -170,9 +205,13 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
 
         // Initialize open slots for step 2
         setSelectedTimes((prev) => {
-          const stillOpen = prev.filter((t) => !isCourtOccupied(activeCourt.courtNumber, selectedDay, t));
+          const stillOpen = prev.filter(
+            (t) =>
+              !isCourtOccupied(activeCourt.courtNumber, selectedDay, t, false) &&
+              !isTimeSlotPassedToday(t, isCurrentSelectionToday, now)
+          );
           if (stillOpen.length > 0) return stillOpen;
-          const firstOpen = getFirstOpenSlotForCourt(activeCourt.courtNumber, selectedDay, allSlotTimes);
+          const firstOpen = getFirstOpenSlotForCourt(activeCourt.courtNumber, selectedDay, allSlotTimes, isCurrentSelectionToday, now);
           return firstOpen ? [firstOpen] : [];
         });
 
@@ -181,22 +220,27 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [currentStep, selectedDay, selectedCourt, displayCourts, allSlotTimes, onSelectCourt]);
+  }, [currentStep, selectedDay, selectedCourt, displayCourts, allSlotTimes, onSelectCourt, isCurrentSelectionToday, now]);
 
   const handleSelectCourt = (court: Court) => {
-    if (isCourtFullyBookedOnDate(court.courtNumber, selectedDay, allSlotTimes)) return;
+    if (isCourtFullyBookedOnDate(court.courtNumber, selectedDay, allSlotTimes, isCurrentSelectionToday, now)) return;
     onSelectCourt(court);
 
     setSelectedTimes((prev) => {
-      const stillOpen = prev.filter((t) => !isCourtOccupied(court.courtNumber, selectedDay, t));
+      const stillOpen = prev.filter(
+        (t) =>
+          !isCourtOccupied(court.courtNumber, selectedDay, t, false) &&
+          !isTimeSlotPassedToday(t, isCurrentSelectionToday, now)
+      );
       if (stillOpen.length > 0) return stillOpen;
-      const firstOpen = getFirstOpenSlotForCourt(court.courtNumber, selectedDay, allSlotTimes);
+      const firstOpen = getFirstOpenSlotForCourt(court.courtNumber, selectedDay, allSlotTimes, isCurrentSelectionToday, now);
       return firstOpen ? [firstOpen] : [];
     });
   };
 
   const handleToggleTime = (timeString: string) => {
-    if (isCourtOccupied(selectedCourt.courtNumber, selectedDay, timeString)) return;
+    if (isTimeSlotPassedToday(timeString, isCurrentSelectionToday, now)) return;
+    if (isCourtOccupied(selectedCourt.courtNumber, selectedDay, timeString, false)) return;
 
     setSelectedTimes((prev) => {
       if (prev.includes(timeString)) {
@@ -211,10 +255,18 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
 
   const selectedFormattedDate = `${monthNames[selectedMonth]} ${selectedDay}, ${selectedYear}`;
   const isSelectedDateFull = isDateFullyBooked(selectedDay);
-  const selectedCourtOpenSlotsCount = getCourtOpenSlotsCount(selectedCourt.courtNumber, selectedDay, allSlotTimes);
+  const isSelectedDateBeyondAdvance = isDateBeyondAdvanceLimit(selectedYear, selectedMonth, selectedDay, now);
+  const selectedCourtOpenSlotsCount = getCourtOpenSlotsCount(
+    selectedCourt.courtNumber,
+    selectedDay,
+    allSlotTimes,
+    isCurrentSelectionToday,
+    now
+  );
 
   const getSlotForCourt = (court: Court, timeString: string): TimeSlot => {
-    const isOccupied = isCourtOccupied(court.courtNumber, selectedDay, timeString);
+    const isPassed = isTimeSlotPassedToday(timeString, isCurrentSelectionToday, now);
+    const isOccupied = isPassed || isCourtOccupied(court.courtNumber, selectedDay, timeString, false);
     const isPeak = timeString.includes('04:') || timeString.includes('05:') || timeString.includes('06:') || timeString.includes('07:') || timeString.includes('08:');
 
     return {
@@ -333,11 +385,11 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
               <div className="relative">
                 <select
                   value={monthOffset}
-                  onChange={(e) => setMonthOffset(parseInt(e.target.value, 10))}
+                  onChange={(e) => handleChangeMonthOffset(parseInt(e.target.value, 10))}
                   aria-label="Select month"
                   className="appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2 pr-8 text-sm font-bold text-slate-800 hover:border-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer shadow-2xs"
                 >
-                  {futureMonths.slice(0, 1).map((fm) => (
+                  {futureMonths.slice(0, canGoNextMonth ? 2 : 1).map((fm) => (
                     <option key={fm.offset} value={fm.offset}>
                       {fm.name} {fm.year}
                     </option>
@@ -351,9 +403,13 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                disabled={true}
-                title="Advance bookings are limited to 5 days"
-                className="p-2 rounded-xl transition-colors min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-300 cursor-not-allowed"
+                disabled={!canGoNextMonth || monthOffset >= 1}
+                title={canGoNextMonth ? "Next Month" : "Advance bookings are limited to 5 days"}
+                className={`p-2 rounded-xl transition-colors min-h-[38px] min-w-[38px] flex items-center justify-center ${
+                  canGoNextMonth && monthOffset < 1
+                    ? 'text-slate-700 hover:bg-slate-100 cursor-pointer'
+                    : 'text-slate-300 cursor-not-allowed'
+                }`}
                 aria-label="Next Month"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -379,8 +435,8 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
 
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const dayNum = i + 1;
-                const isPast = isDateInPast(dayNum, monthOffset);
-                const isBeyondAdvance = isDateBeyondAdvanceLimit(dayNum, monthOffset);
+                const isPast = isDateInPast(selectedYear, selectedMonth, dayNum, now);
+                const isBeyondAdvance = isDateBeyondAdvanceLimit(selectedYear, selectedMonth, dayNum, now);
                 const isFull = isDateFullyBooked(dayNum);
                 const isSelected = selectedDay === dayNum;
                 const isDisabled = isPast || isBeyondAdvance || isFull;
@@ -440,7 +496,7 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
                 <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 border border-rose-200">
                   Fully Booked
                 </span>
-              ) : isDateBeyondAdvanceLimit(selectedDay, monthOffset) ? (
+              ) : isSelectedDateBeyondAdvance ? (
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500 border border-slate-200">
                   Beyond 5-Day Window
                 </span>
@@ -455,10 +511,10 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
             <div className="mt-5 pt-4 border-t border-slate-100">
               <button
                 type="button"
-                disabled={isSelectedDateFull || isDateBeyondAdvanceLimit(selectedDay, monthOffset)}
+                disabled={isSelectedDateFull || isSelectedDateBeyondAdvance}
                 onClick={handleProceedToCourtAndTime}
                 className={`w-full flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-xl font-bold text-sm transition-all shadow-md cursor-pointer ${
-                  isSelectedDateFull || isDateBeyondAdvanceLimit(selectedDay, monthOffset)
+                  isSelectedDateFull || isSelectedDateBeyondAdvance
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                     : 'bg-[#2563eb] text-white hover:bg-[#1d4ed8] active:scale-98 shadow-blue-500/25'
                 }`}
@@ -466,11 +522,11 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
                 <span>
                   {isSelectedDateFull
                     ? 'Please Select Another Date'
-                    : isDateBeyondAdvanceLimit(selectedDay, monthOffset)
+                    : isSelectedDateBeyondAdvance
                       ? 'Selected Date Beyond 5-Day Window'
                       : 'Next: Choose Court & Time'}
                 </span>
-                {!isSelectedDateFull && !isDateBeyondAdvanceLimit(selectedDay, monthOffset) && (
+                {!isSelectedDateFull && !isSelectedDateBeyondAdvance && (
                   <ArrowRight className="h-4 w-4" />
                 )}
               </button>
@@ -550,7 +606,7 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
               <div className="space-y-3">
                 {displayCourts.map((court) => {
                   const isSelected = selectedCourt.id === court.id;
-                  const openSlotsCount = getCourtOpenSlotsCount(court.courtNumber, selectedDay, allSlotTimes);
+                  const openSlotsCount = getCourtOpenSlotsCount(court.courtNumber, selectedDay, allSlotTimes, isCurrentSelectionToday, now);
                   const isCourtFullToday = openSlotsCount === 0;
 
                   return (
@@ -681,16 +737,18 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
                   </div>
                   {morningSlots.map((item) => {
                     const isSelected = selectedTimes.includes(item.time);
-                    const isOccupied = isCourtOccupied(selectedCourt.courtNumber, selectedDay, item.time);
+                    const isPassed = isTimeSlotPassedToday(item.time, isCurrentSelectionToday, now);
+                    const isOccupied = !isPassed && isCourtOccupied(selectedCourt.courtNumber, selectedDay, item.time, false);
+                    const isSlotDisabled = isPassed || isOccupied;
 
                     return (
                       <button
                         key={item.time}
                         type="button"
-                        disabled={isOccupied}
+                        disabled={isSlotDisabled}
                         onClick={() => handleToggleTime(item.time)}
                         className={`w-full flex flex-col items-start p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                          isOccupied
+                          isPassed || isOccupied
                             ? 'border-slate-200 bg-slate-100 text-slate-400 opacity-45 cursor-not-allowed line-through select-none'
                             : isSelected
                               ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
@@ -699,7 +757,11 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
                       >
                         <div className="flex items-center justify-between w-full">
                           <span className="font-bold text-xs">{item.time}</span>
-                          {isOccupied ? (
+                          {isPassed ? (
+                            <span className="text-[8px] px-1 py-0.2 rounded font-black uppercase bg-slate-200 text-slate-500 no-underline">
+                              PAST
+                            </span>
+                          ) : isOccupied ? (
                             <span className="text-[8px] px-1 py-0.2 rounded font-black uppercase bg-slate-200 text-slate-500 no-underline">
                               FULL
                             </span>
@@ -710,7 +772,7 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
                           ) : null}
                         </div>
                         <span className={`text-[10px] mt-0.5 ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>
-                          {isOccupied ? 'Occupied' : '1 hour session'}
+                          {isPassed ? 'Time passed' : isOccupied ? 'Occupied' : '1 hour session'}
                         </span>
                       </button>
                     );
@@ -725,16 +787,18 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
                   </div>
                   {afternoonSlots.map((item) => {
                     const isSelected = selectedTimes.includes(item.time);
-                    const isOccupied = isCourtOccupied(selectedCourt.courtNumber, selectedDay, item.time);
+                    const isPassed = isTimeSlotPassedToday(item.time, isCurrentSelectionToday, now);
+                    const isOccupied = !isPassed && isCourtOccupied(selectedCourt.courtNumber, selectedDay, item.time, false);
+                    const isSlotDisabled = isPassed || isOccupied;
 
                     return (
                       <button
                         key={item.time}
                         type="button"
-                        disabled={isOccupied}
+                        disabled={isSlotDisabled}
                         onClick={() => handleToggleTime(item.time)}
                         className={`w-full flex flex-col items-start p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                          isOccupied
+                          isPassed || isOccupied
                             ? 'border-slate-200 bg-slate-100 text-slate-400 opacity-45 cursor-not-allowed line-through select-none'
                             : isSelected
                               ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
@@ -743,7 +807,11 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
                       >
                         <div className="flex items-center justify-between w-full">
                           <span className="font-bold text-xs">{item.time}</span>
-                          {isOccupied ? (
+                          {isPassed ? (
+                            <span className="text-[8px] px-1 py-0.2 rounded font-black uppercase bg-slate-200 text-slate-500 no-underline">
+                              PAST
+                            </span>
+                          ) : isOccupied ? (
                             <span className="text-[8px] px-1 py-0.2 rounded font-black uppercase bg-slate-200 text-slate-500 no-underline">
                               FULL
                             </span>
@@ -758,7 +826,7 @@ export const CourtScheduleSection: React.FC<CourtScheduleSectionProps> = ({
                           ) : null}
                         </div>
                         <span className={`text-[10px] mt-0.5 ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>
-                          {isOccupied ? 'Occupied' : '1 hour session'}
+                          {isPassed ? 'Time passed' : isOccupied ? 'Occupied' : '1 hour session'}
                         </span>
                       </button>
                     );

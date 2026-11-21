@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Court, BookingReservation } from '@/types/booking';
-import { isCourtOccupied } from '@/lib/courtAvailability';
+import { isCourtOccupied, getDynamicScheduleDates } from '@/lib/courtAvailability';
 import { CourtStatusBadge } from '../CourtStatusBadge';
 
 interface AdminCourtsSectionProps {
@@ -44,14 +44,7 @@ interface CourtBookedSlotItem {
   isLiveBooking: boolean;
 }
 
-const SCHEDULE_DATES = [
-  { day: 9, dateLabel: 'Sep 9, 2025', shortLabel: 'Sep 9', tag: 'Today' },
-  { day: 10, dateLabel: 'Sep 10, 2025', shortLabel: 'Sep 10', tag: 'Tomorrow' },
-  { day: 11, dateLabel: 'Sep 11, 2025', shortLabel: 'Sep 11', tag: 'Thu' },
-  { day: 12, dateLabel: 'Sep 12, 2025', shortLabel: 'Sep 12', tag: 'Fri' },
-  { day: 13, dateLabel: 'Sep 13, 2025', shortLabel: 'Sep 13', tag: 'Sat' },
-  { day: 14, dateLabel: 'Sep 14, 2025', shortLabel: 'Sep 14', tag: 'Sun' },
-];
+const SCHEDULE_DATES = getDynamicScheduleDates();
 
 const MORNING_SLOTS = [
   { time: '08:00 AM', endTime: '09:00 AM', isPeak: false },
@@ -118,7 +111,7 @@ export function AdminCourtsSection({
     () => ownerCourts[0]?.id || 'court-1'
   );
   const [selectedDateFilter, setSelectedDateFilter] = useState<number | 'all'>('all');
-  const [activeGridDay, setActiveGridDay] = useState<number>(9);
+  const [activeGridDay, setActiveGridDay] = useState<number>(() => SCHEDULE_DATES[0]?.day || 1);
 
   // Keep selectedCourt synced with latest court state (e.g. status updates or filter changes)
   const selectedCourt = useMemo(() => {
@@ -328,7 +321,9 @@ export function AdminCourtsSection({
             {ownerCourts.map((court) => {
               const isSelected = selectedCourt?.id === court.id;
               const courtBookings = bookedSlotsByCourtId[court.id] || [];
-              const todayBookedCount = courtBookings.filter((b) => b.dayNumber === 9).length;
+              const todayBookedCount = courtBookings.filter(
+                (b) => b.dayNumber === SCHEDULE_DATES[0]?.day
+              ).length;
               const isMaintenance = court.status === 'maintenance';
 
               return (
@@ -620,7 +615,9 @@ export function AdminCourtsSection({
                     </div>
                     <span className="text-[11px] font-semibold text-[#5f6368]">
                       {selectedDateFilter === 'all'
-                        ? 'Sep 9 – Sep 14, 2025'
+                        ? SCHEDULE_DATES[0]?.year === SCHEDULE_DATES[SCHEDULE_DATES.length - 1]?.year
+                          ? `${SCHEDULE_DATES[0]?.shortLabel} – ${SCHEDULE_DATES[SCHEDULE_DATES.length - 1]?.shortLabel}, ${SCHEDULE_DATES[0]?.year}`
+                          : `${SCHEDULE_DATES[0]?.dateLabel} – ${SCHEDULE_DATES[SCHEDULE_DATES.length - 1]?.dateLabel}`
                         : activeGridDateObj.dateLabel}
                     </span>
                   </div>

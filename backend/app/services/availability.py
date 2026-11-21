@@ -24,8 +24,14 @@ AFTERNOON_SLOTS = [
 
 ALL_SLOT_TIMES = MORNING_SLOTS + AFTERNOON_SLOTS
 
-# Base reference date matching design specifications (Sep 9, 2025)
-BASE_DATE = date(2025, 9, 9)
+# Base reference date synchronized with real-time system clock
+def get_base_date() -> date:
+    return date.today()
+
+
+def format_date_label(d: date) -> str:
+    """Formats a date as 'MMM D, YYYY' (e.g. 'Nov 21, 2026') cross-platform."""
+    return f"{d.strftime('%b')} {d.day}, {d.year}"
 
 # Deterministic occupied court slots pattern for mock / fallback
 MOCK_OCCUPIED_BY_DAY_AND_TIME = {
@@ -64,36 +70,58 @@ MOCK_OCCUPIED_BY_DAY_AND_TIME = {
 
 def parse_date_string(date_str: str) -> date:
     """
-    Parses dates in formats like '2025-09-09' or 'Sep 9, 2025' or 'Sep 9'.
+    Parses dates in formats like '2026-11-21' or 'Nov 21, 2026' or 'Nov 21'.
     """
     clean_str = date_str.strip()
+    today = date.today()
     if clean_str in ["Today", "today"]:
-        return BASE_DATE
+        return today
     if clean_str in ["Tomorrow", "tomorrow"]:
-        return BASE_DATE + timedelta(days=1)
-        
+        return today + timedelta(days=1)
+
     for fmt in ("%Y-%m-%d", "%b %d, %Y", "%B %d, %Y", "%b %d"):
         try:
             parsed = datetime.strptime(clean_str, fmt).date()
             if fmt == "%b %d":
-                parsed = parsed.replace(year=BASE_DATE.year)
+                parsed = parsed.replace(year=today.year)
             return parsed
         except ValueError:
             continue
-            
+
     # Default fallback
-    return BASE_DATE
+    return today
 
 
 def is_beyond_advance_limit(target_date: date) -> bool:
     """
-    Enforces the business rule: booking advance is limited to at most 5 days.
+    Enforces the business rule: booking advance is limited to at most 5 days from today.
     """
-    delta_days = (target_date - BASE_DATE).days
+    today = date.today()
+    delta_days = (target_date - today).days
     return delta_days > settings.MAX_ADVANCE_DAYS or delta_days < 0
 
 
+def is_slot_in_past(target_date: date, time_slot: str) -> bool:
+    """
+    Checks if a time slot has already passed in real-time today.
+    """
+    now = datetime.now()
+    if target_date < now.date():
+        return True
+    if target_date > now.date():
+        return False
+        
+    try:
+        slot_time = datetime.strptime(time_slot.strip(), "%I:%M %p").time()
+        return slot_time <= now.time()
+    except Exception:
+        return False
+
+
 def get_mock_occupied_courts_for_slot(target_date: date, time_slot: str) -> List[int]:
+    """
+    Deterministic schedule generator for courts #1 and #2.
+    """
     day_num = target_date.day
     if day_num in MOCK_OCCUPIED_BY_DAY_AND_TIME:
         slot_map = MOCK_OCCUPIED_BY_DAY_AND_TIME[day_num]

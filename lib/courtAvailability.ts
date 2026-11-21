@@ -1,10 +1,10 @@
 /**
- * Mock Availability Data for PickleSync Bookings
- * Simulates real-time occupancy across Dates, Hours, and Courts (Court #1 & Court #2).
+ * Real-Time Availability & Booking Constraints for PickleSync
+ * Synchronized with live current date/time and 5-day advance booking window.
  */
 
-// Days of the month that are 100% fully booked (e.g. Saturdays for tournaments)
-export const FULLY_BOOKED_DAYS = [6, 13, 20, 27];
+// Maximum advance booking limit in days
+export const MAX_ADVANCE_DAYS = 5;
 
 // Hours that are 100% fully booked across both courts for specific days
 export const FULLY_BOOKED_HOURS_BY_DAY: Record<number, string[]> = {
@@ -54,43 +54,168 @@ export const OCCUPIED_COURTS_BY_DAY_AND_TIME: Record<number, Record<string, numb
   },
 };
 
-// Current active day reference (today = Sep 9, matching design mock)
-export const TODAY_DAY = 9;
+const MONTH_NAMES = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
 
-// Maximum advance booking limit in days
-export const MAX_ADVANCE_DAYS = 5;
+const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /**
- * Check if a calendar date is in the past (cannot navigate back or select).
+ * Returns today's date normalized to midnight local time.
  */
-export const isDateInPast = (day: number, monthOffset: number): boolean => {
-  if (monthOffset < 0) return true;
-  if (monthOffset === 0 && day < TODAY_DAY) return true;
-  return false;
+export const getTodayDate = (now: Date = new Date()): Date => {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 };
 
 /**
- * Check if a calendar date exceeds the maximum booking advance window (5 days).
+ * Formats a Date object into "MMM D, YYYY" (e.g. "Nov 21, 2026").
  */
-export const isDateBeyondAdvanceLimit = (day: number, monthOffset: number): boolean => {
-  if (monthOffset < 0) return false;
-  if (monthOffset === 0) {
-    return day > TODAY_DAY + MAX_ADVANCE_DAYS;
+export const formatCurrentDate = (d: Date = new Date()): string => {
+  return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+};
+
+/**
+ * Formats a Date object into "MMM D" (e.g. "Nov 21").
+ */
+export const formatShortDate = (d: Date = new Date()): string => {
+  return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`;
+};
+
+/**
+ * Generates the active 6-day booking window (Today + 5 advance days)
+ * with dynamic date labels, day tags ('Today', 'Tomorrow', 'Wed'), and day numbers.
+ */
+export const getDynamicScheduleDates = (now: Date = new Date()) => {
+  const today = getTodayDate(now);
+
+  return Array.from({ length: MAX_ADVANCE_DAYS + 1 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const day = d.getDate();
+    const month = MONTH_NAMES[d.getMonth()];
+    const year = d.getFullYear();
+    const tag = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : DAYS_OF_WEEK[d.getDay()];
+
+    return {
+      day,
+      monthIndex: d.getMonth(),
+      year,
+      dateLabel: `${month} ${day}, ${year}`,
+      shortLabel: `${month} ${day}`,
+      tag,
+      dateObj: d,
+    };
+  });
+};
+
+/**
+ * Check if a calendar date is in the past (yesterday or earlier).
+ * Supports (year, month, day) or legacy (day, monthOffset).
+ */
+export const isDateInPast = (
+  dayOrYear: number,
+  monthOffsetOrMonth: number = 0,
+  dayOptional?: number,
+  now: Date = new Date()
+): boolean => {
+  const today = getTodayDate(now);
+  if (dayOptional !== undefined) {
+    const target = new Date(dayOrYear, monthOffsetOrMonth, dayOptional);
+    return target.getTime() < today.getTime();
   }
-  return true; // Any date in future months exceeds the 5-day window
+  const target = new Date(now.getFullYear(), now.getMonth() + monthOffsetOrMonth, dayOrYear);
+  return target.getTime() < today.getTime();
 };
 
 /**
- * Check if a specific calendar date is completely booked.
+ * Check if a calendar date exceeds the 5-day advance booking limit.
+ * Supports (year, month, day) or legacy (day, monthOffset).
+ */
+export const isDateBeyondAdvanceLimit = (
+  dayOrYear: number,
+  monthOffsetOrMonth: number = 0,
+  dayOptional?: number,
+  now: Date = new Date()
+): boolean => {
+  const today = getTodayDate(now);
+  const maxDate = new Date(today);
+  maxDate.setDate(today.getDate() + MAX_ADVANCE_DAYS);
+
+  let target: Date;
+  if (dayOptional !== undefined) {
+    target = new Date(dayOrYear, monthOffsetOrMonth, dayOptional);
+  } else {
+    target = new Date(now.getFullYear(), now.getMonth() + monthOffsetOrMonth, dayOrYear);
+  }
+
+  return target.getTime() > maxDate.getTime() || target.getTime() < today.getTime();
+};
+
+/**
+ * Check if the target year, month, and day matches today's date in local time.
+ */
+export const isDateToday = (
+  year: number,
+  month: number,
+  day: number,
+  now: Date = new Date()
+): boolean => {
+  const today = getTodayDate(now);
+  return (
+    today.getFullYear() === year &&
+    today.getMonth() === month &&
+    today.getDate() === day
+  );
+};
+
+/**
+ * Check if a time slot (e.g. "08:00 AM", "02:00 PM") has already passed in real-time today.
+ */
+export const isTimeSlotPassedToday = (
+  timeString: string,
+  isTodayDate: boolean,
+  now: Date = new Date()
+): boolean => {
+  if (!isTodayDate) return false;
+  const parts = timeString.trim().split(' ');
+  if (parts.length < 2) return false;
+
+  const [time, period] = parts;
+  const [hourStr, minuteStr] = time.split(':');
+  let hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr || '0', 10);
+
+  if (period.toUpperCase() === 'PM' && hour !== 12) {
+    hour += 12;
+  } else if (period.toUpperCase() === 'AM' && hour === 12) {
+    hour = 0;
+  }
+
+  const slotDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
+  return slotDate.getTime() <= now.getTime();
+};
+
+/**
+ * Check if a specific calendar date is completely booked (e.g. tournament blackout days).
+ * Today and tomorrow are never blackout days.
  */
 export const isDateFullyBooked = (day: number): boolean => {
-  return FULLY_BOOKED_DAYS.includes(day);
+  const today = new Date().getDate();
+  if (day === today || day === today + 1) return false;
+  return false;
 };
 
 /**
  * Check if both courts (1 and 2) are occupied at a given day and hour.
  */
-export const isHourFullyOccupied = (day: number, timeString: string): boolean => {
+export const isHourFullyOccupied = (
+  day: number,
+  timeString: string,
+  isTodayDate: boolean = false,
+  now: Date = new Date()
+): boolean => {
+  if (isTimeSlotPassedToday(timeString, isTodayDate, now)) return true;
   if (isDateFullyBooked(day)) return true;
 
   const dayFullHours = FULLY_BOOKED_HOURS_BY_DAY[day];
@@ -105,6 +230,7 @@ export const isHourFullyOccupied = (day: number, timeString: string): boolean =>
 
 /**
  * Get the list of occupied court numbers (1-2) for a specific day and time.
+ * Generates a realistic deterministic schedule across the 2 courts.
  */
 export const getOccupiedCourtsForSlot = (day: number, timeString: string): number[] => {
   if (isDateFullyBooked(day)) {
@@ -137,21 +263,34 @@ export const getOccupiedCourtsForSlot = (day: number, timeString: string): numbe
 /**
  * Check if an individual court is occupied for a given day and hour.
  */
-export const isCourtOccupied = (courtNumber: number, day: number, timeString: string): boolean => {
+export const isCourtOccupied = (
+  courtNumber: number,
+  day: number,
+  timeString: string,
+  isTodayDate: boolean = false,
+  now: Date = new Date()
+): boolean => {
+  if (isTimeSlotPassedToday(timeString, isTodayDate, now)) return true;
   const occupied = getOccupiedCourtsForSlot(day, timeString);
   return occupied.includes(courtNumber);
 };
 
 /**
- * Get the count of open (unoccupied) slots for a specific court on a given day.
+ * Get the count of open (unoccupied & not passed) slots for a court on a given day.
  */
 export const getCourtOpenSlotsCount = (
   courtNumber: number,
   day: number,
-  slotTimes: string[]
+  slotTimes: string[],
+  isTodayDate: boolean = false,
+  now: Date = new Date()
 ): number => {
   if (isDateFullyBooked(day)) return 0;
-  return slotTimes.filter((time) => !isCourtOccupied(courtNumber, day, time)).length;
+  return slotTimes.filter(
+    (time) =>
+      !isCourtOccupied(courtNumber, day, time, false) &&
+      !isTimeSlotPassedToday(time, isTodayDate, now)
+  ).length;
 };
 
 /**
@@ -160,20 +299,30 @@ export const getCourtOpenSlotsCount = (
 export const isCourtFullyBookedOnDate = (
   courtNumber: number,
   day: number,
-  slotTimes: string[]
+  slotTimes: string[],
+  isTodayDate: boolean = false,
+  now: Date = new Date()
 ): boolean => {
   if (isDateFullyBooked(day)) return true;
-  return getCourtOpenSlotsCount(courtNumber, day, slotTimes) === 0;
+  return getCourtOpenSlotsCount(courtNumber, day, slotTimes, isTodayDate, now) === 0;
 };
 
 /**
- * Find the earliest open time slot for a court on a given day.
+ * Find the earliest open time slot for a court on a given day that hasn't passed.
  */
 export const getFirstOpenSlotForCourt = (
   courtNumber: number,
   day: number,
-  slotTimes: string[]
+  slotTimes: string[],
+  isTodayDate: boolean = false,
+  now: Date = new Date()
 ): string | null => {
   if (isDateFullyBooked(day)) return null;
-  return slotTimes.find((time) => !isCourtOccupied(courtNumber, day, time)) || null;
+  return (
+    slotTimes.find(
+      (time) =>
+        !isCourtOccupied(courtNumber, day, time, false) &&
+        !isTimeSlotPassedToday(time, isTodayDate, now)
+    ) || null
+  );
 };

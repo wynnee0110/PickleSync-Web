@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Court } from '@/types/booking';
+import { getDynamicScheduleDates, formatCurrentDate } from '@/lib/courtAvailability';
 import { ReservationFormData } from '../types';
 
 interface NewReservationModalProps {
@@ -18,10 +19,11 @@ export function NewReservationModal({
   defaultCourtId,
   onSubmit,
 }: NewReservationModalProps) {
+  const scheduleDates = useMemo(() => (isOpen ? getDynamicScheduleDates() : getDynamicScheduleDates()), [isOpen]);
   const [formCourtId, setFormCourtId] = useState('');
   const [formPlayerName, setFormPlayerName] = useState('');
   const [formTimeSlot, setFormTimeSlot] = useState('06:00 PM');
-  const [formDate, setFormDate] = useState('Sep 9, 2025');
+  const [formDate, setFormDate] = useState(() => scheduleDates[0]?.dateLabel || formatCurrentDate());
   const [formDuration, setFormDuration] = useState('60');
 
   if (!isOpen) return null;
@@ -108,10 +110,11 @@ export function NewReservationModal({
                 onChange={(e) => setFormDate(e.target.value)}
                 className="w-full rounded-xl border border-[#dadce0] px-3 py-2 text-sm text-[#1f1f1f] outline-none focus:border-[#0b57d0] focus:ring-1 focus:ring-[#0b57d0] bg-white cursor-pointer"
               >
-                <option value="Sep 9, 2025">Sep 9, 2025 (Today)</option>
-                <option value="Sep 10, 2025">Sep 10, 2025 (Tomorrow)</option>
-                <option value="Sep 11, 2025">Sep 11, 2025</option>
-                <option value="Sep 12, 2025">Sep 12, 2025</option>
+                {scheduleDates.map((d) => (
+                  <option key={d.dateLabel} value={d.dateLabel}>
+                    {d.dateLabel} ({d.tag})
+                  </option>
+                ))}
               </select>
             </div>
             <div>

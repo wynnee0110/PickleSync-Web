@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Court, TimeSlot, BookingReservation } from '@/types/booking';
+import { formatCurrentDate } from '@/lib/courtAvailability';
+import { createBookingAPI } from '@/lib/api/client';
 import confetti from 'canvas-confetti';
 import { 
   X, 
@@ -35,12 +37,13 @@ type ModalStep = 'confirm' | 'payment' | 'success';
 export const BookingModal: React.FC<BookingModalProps> = ({
   court,
   initialSlot,
-  date = 'Sep 9, 2025',
+  date,
   slotTimes = [],
   isOpen,
   onClose,
   onConfirmBooking,
 }) => {
+  const effectiveDate = date || formatCurrentDate();
   const [step, setStep] = useState<ModalStep>('confirm');
   const [confirmedReservation, setConfirmedReservation] = useState<BookingReservation | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,18 +68,35 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const facilityFee = 0;
   const totalPrice = courtTotal + facilityFee;
 
-  const handleProcessPayment = () => {
+  const handleProcessPayment = async () => {
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const passCode = `SYNC-${court.courtNumber}${Math.floor(1000 + Math.random() * 9000)}`;
-      const reservation: BookingReservation = {
+    try {
+      // 1. Commit booking atomically to Supabase via backend API
+      const apiResult = await createBookingAPI({
+        courtId: court.id,
+        courtNumber: court.courtNumber,
+        courtName: court.name,
+        venue: court.venue,
+        date: effectiveDate,
+        timeSlots: timesToDisplay,
+        durationMinutes: timesToDisplay.length * 60,
+        playerNames: ['You (Host)'],
+        totalPrice: totalPrice,
+        paymentProvider: paymentMethod,
+      });
+
+      const passCode = apiResult?.accessPassCode || `SYNC-${court.courtNumber}${Math.floor(1000 + Math.random() * 9000)}`;
+      const reservation: BookingReservation = apiResult ? {
+        ...apiResult,
+        addOns: apiResult.addOns || [],
+      } : {
         bookingId: `BK-${Date.now().toString().slice(-6)}`,
         courtId: court.id,
         courtName: court.name,
         courtNumber: court.courtNumber,
         venue: court.venue,
-        date: date,
+        date: effectiveDate,
         timeSlot: timesToDisplay.join(', '),
         durationMinutes: timesToDisplay.length * 60,
         addOns: [],
@@ -103,7 +123,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       } catch {
         // Confetti fallback
       }
-    }, 500);
+    } catch (err) {
+      console.error('Booking submission error:', err);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -169,7 +192,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     </span>
                   </div>
                   <div className="font-extrabold text-slate-900 text-xs sm:text-sm truncate">
-                    {date}
+                    {effectiveDate}
                   </div>
                 </div>
 
@@ -273,7 +296,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <div className="min-w-0">
                   <span className="text-slate-400 block text-[9px] sm:text-[10px] uppercase font-bold">Booking Details</span>
                   <span className="font-black text-slate-900 truncate block">
-                    Court #{court.courtNumber} • {date} ({timesToDisplay.length} {timesToDisplay.length === 1 ? 'slot' : 'slots'})
+                    Court #{court.courtNumber} • {effectiveDate} ({timesToDisplay.length} {timesToDisplay.length === 1 ? 'slot' : 'slots'})
                   </span>
                 </div>
                 <div className="text-right shrink-0">

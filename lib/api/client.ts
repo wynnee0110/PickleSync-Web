@@ -71,6 +71,20 @@ export async function createBookingAPI(data: {
   }
 }
 
+export async function fetchBookingsFromAPI(): Promise<BookingReservation[]> {
+  try {
+    const res = await fetch(`${API_BASE}/bookings`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return data.map((b: BookingReservation) => ({
+      ...b,
+      addOns: b.addOns || [],
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function cancelBookingAPI(bookingId: string): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/bookings/${encodeURIComponent(bookingId)}/cancel`, {

@@ -29,6 +29,7 @@ import { AdminMembersSection } from './sections/AdminMembersSection';
 import { AdminQuickActionsSection } from './sections/AdminQuickActionsSection';
 import { NewReservationModal } from './modals/NewReservationModal';
 import { CourtStatusModal } from './modals/CourtStatusModal';
+import { createBookingAPI } from '@/lib/api/client';
 
 export function AdminDashboardClient() {
   const router = useRouter();
@@ -181,11 +182,23 @@ export function AdminDashboardClient() {
   };
 
   // Handle creating a new reservation
-  const handleCreateReservation = (data: ReservationFormData) => {
+  const handleCreateReservation = async (data: ReservationFormData) => {
     const selectedCourt = courtsList.find((c) => c.id === data.courtId) || courtsList[0];
     const newId = `BK-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    addBooking({
+    const apiResult = await createBookingAPI({
+      courtId: selectedCourt.id,
+      courtNumber: selectedCourt.courtNumber,
+      courtName: selectedCourt.name,
+      venue: selectedCourt.venue,
+      date: data.date,
+      timeSlots: [data.timeSlot],
+      durationMinutes: parseInt(data.duration, 10),
+      playerNames: [data.playerName],
+      totalPrice: selectedCourt.pricePerHour,
+    });
+
+    const finalBooking = apiResult || {
       bookingId: newId,
       courtId: selectedCourt.id,
       courtName: selectedCourt.name,
@@ -200,10 +213,11 @@ export function AdminDashboardClient() {
       totalPrice: selectedCourt.pricePerHour,
       createdAt: 'Just now',
       accessPassCode: `SYNC-CRT${selectedCourt.courtNumber}-${Math.floor(1000 + Math.random() * 9000)}`,
-    });
+    };
 
+    addBooking(finalBooking);
     setIsNewBookingModalOpen(false);
-    showToast(`Reservation ${newId} confirmed for ${data.playerName}!`);
+    showToast(`Reservation ${finalBooking.bookingId} confirmed for ${data.playerName}!`);
   };
 
   // Subheader titles by active section

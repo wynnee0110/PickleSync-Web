@@ -9,8 +9,10 @@ from app.schemas.court import CourtBase
 from app.schemas.booking import BookingCreate, BookingResponse, CourtAvailabilityResponse
 from app.services.availability import (
     ALL_SLOT_TIMES,
+    format_date_label,
     parse_date_string,
     is_beyond_advance_limit,
+    is_slot_in_past,
     get_mock_occupied_courts_for_slot,
 )
 
@@ -63,6 +65,8 @@ _in_memory_courts: List[Dict[str, Any]] = [
     },
 ]
 
+_today_label = format_date_label(datetime.now().date())
+
 _in_memory_bookings: List[Dict[str, Any]] = [
     {
         "bookingId": "BK-782194",
@@ -70,7 +74,7 @@ _in_memory_bookings: List[Dict[str, Any]] = [
         "courtName": "Court #1 · Center Court Championship",
         "courtNumber": 1,
         "venue": "PickleSync Arena",
-        "date": "Sep 9, 2025",
+        "date": _today_label,
         "timeSlot": "07:00 PM",
         "durationMinutes": 60,
         "playerNames": ["You (Host)", "Jordan Vance"],
@@ -84,7 +88,7 @@ _in_memory_bookings: List[Dict[str, Any]] = [
 
 # Set of reserved slots: (court_id, date_str, time_slot)
 _in_memory_reserved_slots = {
-    ("court-1", "Sep 9, 2025", "07:00 PM"),
+    ("court-1", _today_label, "07:00 PM"),
 }
 
 
@@ -160,7 +164,7 @@ class BookingService:
         is_beyond = is_beyond_advance_limit(parsed_date)
 
         court_id = f"court-{court_number}"
-        formatted_date = parsed_date.strftime("%b %-d, %Y") if hasattr(parsed_date, "strftime") else date_str
+        formatted_date = format_date_label(parsed_date)
 
         occupied_slots: List[str] = []
 
@@ -197,6 +201,11 @@ class BookingService:
                             mock_occupied.append(t_slot)
             occupied_slots = mock_occupied
 
+        # Mark past time slots on today's date as unavailable
+        for slot_time in ALL_SLOT_TIMES:
+            if is_slot_in_past(parsed_date, slot_time) and slot_time not in occupied_slots:
+                occupied_slots.append(slot_time)
+
         available_slots = [s for s in ALL_SLOT_TIMES if s not in occupied_slots]
         open_count = len(available_slots)
         is_fully_booked = open_count == 0 or is_beyond
@@ -216,7 +225,7 @@ class BookingService:
     @staticmethod
     def create_booking(data: BookingCreate) -> BookingResponse:
         parsed_date = parse_date_string(data.date)
-        formatted_date = parsed_date.strftime("%b %-d, %Y")
+        formatted_date = format_date_label(parsed_date)
 
         # 1. Enforce 5-Day Advance Booking Rule
         if is_beyond_advance_limit(parsed_date):
@@ -224,6 +233,14 @@ class BookingService:
                 status_code=400,
                 detail="Booking advance is strictly limited to 5 days. Please select an earlier date.",
             )
+
+        # 1b. Prevent booking time slots that have already passed today
+        for slot in data.timeSlots:
+            if is_slot_in_past(parsed_date, slot):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Time slot {slot} on {formatted_date} has already passed. Please select an upcoming time.",
+                )
 
         new_booking_id = f"BK-{random.randint(100000, 999999)}"
         pin_code = random.randint(1000, 9999)

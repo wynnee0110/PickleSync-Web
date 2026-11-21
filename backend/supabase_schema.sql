@@ -9,7 +9,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS public.courts (
     id TEXT PRIMARY KEY,
     court_number INT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
     venue TEXT NOT NULL DEFAULT 'PickleSync Arena',
     location TEXT NOT NULL,
     type TEXT NOT NULL, -- 'indoor' | 'championship'
@@ -27,7 +26,6 @@ CREATE TABLE IF NOT EXISTS public.courts (
 -- 3. Bookings Table
 CREATE TABLE IF NOT EXISTS public.bookings (
     id TEXT PRIMARY KEY, -- e.g. 'BK-901234'
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     court_id TEXT NOT NULL REFERENCES public.courts(id) ON DELETE CASCADE,
     court_number INT NOT NULL,
     court_name TEXT NOT NULL,

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { COURTS_DATA } from '@/lib/courts';
 import { Court, TimeSlot, BookingReservation } from '@/types/booking';
+import { formatCurrentDate } from '@/lib/courtAvailability';
 import { CourtScheduleSection } from '@/components/sections/CourtScheduleSection';
 import { BookingModal } from '@/components/ui/BookingModal';
 import { useBooking } from '@/components/providers/BookingProvider';
@@ -31,7 +32,7 @@ export function BookCourtClient() {
 
   // Booking Modal State
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [bookingDate, setBookingDate] = useState<string>('Sep 9, 2025');
+  const [bookingDate, setBookingDate] = useState<string>(() => formatCurrentDate());
   const [bookingSlotTimes, setBookingSlotTimes] = useState<string[]>([]);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
